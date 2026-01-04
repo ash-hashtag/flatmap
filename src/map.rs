@@ -1,4 +1,5 @@
-#[derive(Debug)]
+use std::fmt::Debug;
+
 pub struct FlatMapEntry<K, V> {
     key: K,
     value: V,
@@ -25,6 +26,24 @@ impl<K, V> FlatMapEntry<K, V> {
     }
 }
 
+impl<K: Debug, V: Debug> Debug for FlatMapEntry<K, V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FlatMapEntry")
+            .field("key", &self.key)
+            .field("value", &self.value)
+            .finish()
+    }
+}
+
+impl<K: Clone, V: Clone> Clone for FlatMapEntry<K, V> {
+    fn clone(&self) -> Self {
+        Self {
+            key: self.key.clone(),
+            value: self.value.clone(),
+        }
+    }
+}
+
 impl<K, V> From<(K, V)> for FlatMapEntry<K, V> {
     fn from(value: (K, V)) -> Self {
         Self::new(value.0, value.1)
@@ -38,12 +57,33 @@ impl<K, V> Into<(K, V)> for FlatMapEntry<K, V> {
 }
 
 /// Linear Map with no sorting guarantee and no duplicate entries
-#[derive(Default, Debug)]
-pub struct FlatMap<K, V> {
+pub struct FlatMap<K: Eq, V> {
     inner: Vec<FlatMapEntry<K, V>>,
 }
 
-impl<K, V> FlatMap<K, V>
+impl<K: Eq + Debug, V: Debug> Debug for FlatMap<K, V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FlatMap")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl<K: Eq + Clone, V: Clone> Clone for FlatMap<K, V> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+impl<K: Eq, V> Default for FlatMap<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<K: Eq, V> FlatMap<K, V>
 where
     K: Eq,
 {
@@ -133,7 +173,7 @@ where
     }
 }
 
-impl<K, V> IntoIterator for FlatMap<K, V> {
+impl<K: Eq, V> IntoIterator for FlatMap<K, V> {
     type Item = FlatMapEntry<K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -143,17 +183,17 @@ impl<K, V> IntoIterator for FlatMap<K, V> {
     type IntoIter = std::vec::IntoIter<FlatMapEntry<K, V>>;
 }
 
-pub struct ConstantFlatMap<K, V, const N: usize> {
+pub struct ConstantFlatMap<K: Eq, V, const N: usize> {
     inner: [FlatMapEntry<K, V>; N],
 }
 
-impl<K, V, const N: usize> From<[FlatMapEntry<K, V>; N]> for ConstantFlatMap<K, V, N> {
+impl<K: Eq, V, const N: usize> From<[FlatMapEntry<K, V>; N]> for ConstantFlatMap<K, V, N> {
     fn from(entries: [FlatMapEntry<K, V>; N]) -> Self {
         Self { inner: entries }
     }
 }
 
-impl<K, V, const N: usize> From<[(K, V); N]> for ConstantFlatMap<K, V, N> {
+impl<K: Eq, V, const N: usize> From<[(K, V); N]> for ConstantFlatMap<K, V, N> {
     fn from(entries: [(K, V); N]) -> Self {
         Self {
             inner: entries.map(FlatMapEntry::from),
@@ -161,10 +201,23 @@ impl<K, V, const N: usize> From<[(K, V); N]> for ConstantFlatMap<K, V, N> {
     }
 }
 
-impl<K, V, const N: usize> ConstantFlatMap<K, V, N>
-where
-    K: Eq,
-{
+impl<K: Eq + Debug, V: Debug, const N: usize> Debug for ConstantFlatMap<K, V, N> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConstantFlatMap")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl<K: Eq + Clone, V: Clone, const N: usize> Clone for ConstantFlatMap<K, V, N> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+impl<K: Eq, V, const N: usize> ConstantFlatMap<K, V, N> {
     pub fn get(&self, key: &K) -> Option<&V> {
         for entry in &self.inner {
             if &entry.key == key {

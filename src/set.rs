@@ -1,7 +1,28 @@
-pub struct FlatSet<K> {
+pub struct FlatSet<K: Eq> {
     inner: Vec<K>,
 }
 
+impl<K: Eq + std::fmt::Debug> std::fmt::Debug for FlatSet<K> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FlatSet")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl<K: Eq + Clone> Clone for FlatSet<K> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+impl<K: Eq> Default for FlatSet<K> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// Linear Set with no sorting guarantees
 impl<K: Eq> FlatSet<K> {
@@ -77,7 +98,7 @@ impl<K: Eq> FlatSet<K> {
     }
 }
 
-impl<K> IntoIterator for FlatSet<K> {
+impl<K: Eq> IntoIterator for FlatSet<K> {
     type Item = K;
 
     type IntoIter = std::vec::IntoIter<K>;
@@ -96,9 +117,24 @@ where
     }
 }
 
-pub struct ConstantFlatSet<K, const N: usize> {
-    // cause I'm lazy and hope compiler optimizes away the abstractions
+pub struct ConstantFlatSet<K: Eq, const N: usize> {
     inner: [K; N],
+}
+
+impl<K: Eq + std::fmt::Debug, const N: usize> std::fmt::Debug for ConstantFlatSet<K, N> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConstantFlatSet")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl<K: Eq + Clone, const N: usize> Clone for ConstantFlatSet<K, N> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
 }
 
 impl<K: Eq, const N: usize> ConstantFlatSet<K, N> {
